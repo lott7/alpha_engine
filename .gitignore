@@ -1,0 +1,41 @@
+# Python caches & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments (shared env lives at C:\Users\lott7\.venvs\py313, no local venv here)
+env_*/
+venv/
+.venv/
+.venv*/
+
+# Environment files
+.env
+.env.*
+
+# Packaging / build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+*.whl
+
+# Test / typecheck / coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Markdown docs other than README.md are kept local, not published
+*.md
+!README.md
+
+# Project data
+/research
+ticker_counts_per_period.json

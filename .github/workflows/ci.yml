@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout alpha_engine
+        uses: actions/checkout@v4
+
+      - name: Checkout util (shared dependency, not published to PyPI)
+        uses: actions/checkout@v4
+        with:
+          repository: lott7/util
+          path: _util
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ./_util
+          pip install -e .
+          pip install ruff mypy pytest
+
+      - name: Ruff check
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: Mypy
+        run: mypy src
+
+      - name: Pytest
+        # No tests/ dir exists yet; treat "no tests collected" (exit 5) as
+        # success so this step starts enforcing itself as soon as tests land.
+        run: pytest || [ $? -eq 5 ]
