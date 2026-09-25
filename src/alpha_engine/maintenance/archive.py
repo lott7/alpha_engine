@@ -7,8 +7,7 @@ from typing import Any
 import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.engine import CursorResult, Engine
-
-from alpha_engine.data import get_engine
+from util.db.connection import get_engine as _get_engine
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,7 +61,7 @@ def archive_us_equities_tickers(
     if not archive_targets:
         raise ValueError("tickers must contain at least one (symbol, exchange) pair")
 
-    engine = engine or get_engine()
+    engine = engine or _get_engine()
     _ensure_archive_table(engine, schema=schema, table_name=archive_table_name)
 
     qualified_source = _qualified_name(schema, source_table_name)
