@@ -96,7 +96,10 @@ class Data:
         strategy_mask = ~wide_df.columns.isin(etf_symbols_list)
         strategy_wide = wide_df.loc[:, strategy_mask]
 
+        ## Data Cleaning with details discovered during initial exploration phase
         # The training set must contain a full year of data to estimate the model
+        # Exclude symbols with an adjusted close value=999999.9999
+        strategy_wide = strategy_wide.replace(999999.9999, np.nan)
         filled_strategy_wide = strategy_wide.bfill(limit=1).ffill(limit_area="inside")
         counts = filled_strategy_wide.count()
         complete_symbols = counts.index[counts >= counts.mode().iloc[0]]
@@ -104,7 +107,21 @@ class Data:
         # Since market capitalization is unavailable, dollar volume is used as an approximation
         strategy_df = df.loc[~df["symbol"].isin(etf_symbols_list)].copy()
         strategy_df["dollar_volume"] = strategy_df["close"] * strategy_df["volume"]
-        avg_day_volume = strategy_df.groupby("symbol")["dollar_volume"].mean().loc[complete_symbols]
+        strategy_df["return"] = strategy_df.groupby("symbol")["adjusted_close"].pct_change()
+
+        avg_day_volume = strategy_df.groupby("symbol")["dollar_volume"].mean()
+        symbol_std = strategy_df.groupby("symbol")["return"].std()
+
+        # Exclude symbols with return volatility at or above 1.
+        std_threshold_list = symbol_std.loc[symbol_std >= 1].index.tolist()
+
+        q90_volume = strategy_df.groupby("symbol")["dollar_volume"].quantile(q=0.90)
+        # Exclude symbols whose 90th percentile dollar volume is below their average.
+        q90_threshold_list = q90_volume[q90_volume < avg_day_volume].index.tolist()
+
+        excluded_symbols = set(std_threshold_list).union(q90_threshold_list)
+        eligible_symbols = complete_symbols[~complete_symbols.isin(excluded_symbols)]
+        avg_day_volume = avg_day_volume.loc[eligible_symbols]
 
         # Reducing the training set to a targeted number
         selected_count = min(target_symbol_count, len(avg_day_volume))

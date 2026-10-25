@@ -38,4 +38,5 @@ htmlcov/
 
 # Project data
 /research
+/results
 ticker_counts_per_period.json
